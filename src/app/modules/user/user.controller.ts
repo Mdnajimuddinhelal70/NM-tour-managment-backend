@@ -1,22 +1,19 @@
 /* eslint-disable no-console */
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status-codes";
-import { User } from "./user.model";
+import { UserServices } from "./user.service";
 
-const createUser = async (req: Request, res: Response) => {
+const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email } = req.body;
-    const user = await User.create({ name, email });
+    const user = await UserServices.createUser(req.body);
 
     res.status(httpStatus.CREATED).json({
       message: "User created succesfully",
       data: user,
     });
-  } catch (error) {
-    res.status(httpStatus.BAD_REQUEST).json({
-      success: false,
-    });
-    console.log(error);
+  } catch (err) {
+    console.log(err);
+    next(err);
   }
 };
 
