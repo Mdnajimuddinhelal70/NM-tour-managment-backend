@@ -1,3 +1,5 @@
+import { globalEerrorHandler } from "./app/middlewares/globalerrorHandle";
+
 import cors from "cors";
 import express, { type Request, type Response } from "express";
 import { router } from "./app/routes";
@@ -11,4 +13,6 @@ app.get("/", (req: Request, res: Response) => {
     message: "Welcomee to Nm Tour Managment.",
   });
 });
+
+app.use(globalEerrorHandler);
 export default app;
