@@ -1,8 +1,9 @@
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
+import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import type { IAuthProvider, IUser } from "./user.interface";
+import { Role, type IAuthProvider, type IUser } from "./user.interface";
 import { User } from "./user.model";
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
@@ -49,7 +50,62 @@ const getAllUsers = async () => {
   };
 };
 
+const updateUser = async (
+  userId: string,
+  payload: Partial<IUser>,
+  decodedToken: JwtPayload
+) => {
+  const ifUserExist = await User.findById(userId);
+
+  if (!ifUserExist) {
+    throw new AppError(httpStatus.NOT_FOUND, "User Not Found");
+  }
+
+  if (payload.role) {
+    if (decodedToken.role === Role.USER || decodedToken.role === Role.GUIDE) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You are not authorized to change role."
+      );
+    }
+
+    if (
+      payload.role === Role.SUPER_ADMIN &&
+      decodedToken.role !== Role.SUPER_ADMIN
+    ) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "Only SUPER_ADMIN can assign SUPER_ADMIN role."
+      );
+    }
+  }
+
+  if (payload.isActive || payload.isDeleted || payload.isVerified) {
+    if (decodedToken.role === Role.USER || decodedToken.role === Role.GUIDE) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You are not authorized to modify status."
+      );
+    }
+  }
+
+  if (payload.password) {
+    payload.password = await bcryptjs.hash(
+      payload.password,
+      Number(envVars.BCRYPT_SALT_ROUND)
+    );
+  }
+
+  const newUpdateUser = await User.findByIdAndUpdate(userId, payload, {
+    new: true,
+    runValidators: true,
+  });
+
+  return newUpdateUser;
+};
+
 export const UserServices = {
   createUser,
   getAllUsers,
+  updateUser,
 };

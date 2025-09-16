@@ -18,4 +18,10 @@ route.get(
   UserController.getAllUsers
 );
 
+route.patch(
+  "/:id",
+  // validateRequest(createUserZodSchema),
+  checkAuth(...Object.values(Role)),
+  UserController.updateUser
+);
 export const UserRoutes = route;

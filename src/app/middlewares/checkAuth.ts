@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import type { NextFunction, Request, Response } from "express";
-import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
@@ -12,21 +11,21 @@ export const checkAuth =
       const accessToken = req.headers.authorization;
 
       if (!accessToken) {
-        throw new AppError(httpStatus.UNAUTHORIZED, "No Token Recieved");
+        throw new AppError(403, "No Token Recieved");
       }
 
       const verifiedToken = verifyToken(
         accessToken,
         envVars.JWT_ACCESS_SECRET
-      ) as unknown as JwtPayload;
+      ) as JwtPayload;
+
       if (!authRoles.includes(verifiedToken.role)) {
-        throw new AppError(
-          httpStatus.UNAUTHORIZED,
-          "You are not permited to viwe this route!"
-        );
+        throw new AppError(403, "You are not parmitted to view this route!!");
       }
+      req.user = verifiedToken;
       next();
     } catch (error) {
-      console.log(error);
+      console.log("Jwt Error", error);
+      next(error);
     }
   };
