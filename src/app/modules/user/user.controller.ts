@@ -23,15 +23,28 @@ const createUser = catchAsync(
   }
 );
 
+const updateUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id as string;
+    // const token = req.headers.authorization;
+    // const verifiedToken = verifyToken(token as string, envVars.JWT_ACCESS_SECRET) as JwtPayload
+
+    const verifiedToken = req.user;
+    const payload = req.body;
+    const user = await UserServices.updateUser(userId, payload, verifiedToken);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "User Updated successfully!",
+      data: user,
+    });
+  }
+);
+
 const getAllUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const result = await UserServices.getAllUsers();
-
-    // res.status(httpStatus.OK).json({
-    //   success: true,
-    //   message: "All Users Retrived Successfully!",
-    //   data: users,
-    // });
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.CREATED,
@@ -45,4 +58,5 @@ const getAllUsers = catchAsync(
 export const UserController = {
   createUser,
   getAllUsers,
+  updateUser,
 };
