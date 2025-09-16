@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 export const genaerateToken = (
   payload: JwtPayload,
   secret: string,
-  expiresIn: string
+  expiresIn: string | number
 ) => {
   const token = jwt.sign(payload, secret, {
     expiresIn,
