@@ -1,5 +1,6 @@
 import { globalEerrorHandler } from "./app/middlewares/globalerrorHandle";
 
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type Request, type Response } from "express";
 import { notFound } from "./app/middlewares/notFound";
@@ -7,6 +8,7 @@ import { router } from "./app/routes";
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors());
 app.use("/api/v1", router);
 app.get("/", (req: Request, res: Response) => {
