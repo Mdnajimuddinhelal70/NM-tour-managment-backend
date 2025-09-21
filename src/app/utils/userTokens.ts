@@ -1,6 +1,10 @@
+import httpStatus from "http-status-codes";
+import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
-import type { IUser } from "../modules/user/user.interface";
-import { genaerateToken } from "./jwt";
+import AppError from "../errorHelpers/AppError";
+import { IsActive, type IUser } from "../modules/user/user.interface";
+import { User } from "../modules/user/user.model";
+import { generateToken, verifyToken } from "./jwt";
 
 export const createUserTokens = (user: Partial<IUser>) => {
   const jwtPayload = {
@@ -10,13 +14,13 @@ export const createUserTokens = (user: Partial<IUser>) => {
   };
 
   // Generated from utils/jwt
-  const accessToken = genaerateToken(
+  const accessToken = generateToken(
     jwtPayload,
     envVars.JWT_ACCESS_SECRET,
     envVars.JWT_ACCESS_EXPIRES
   );
 
-  const refreshToken = genaerateToken(
+  const refreshToken = generateToken(
     jwtPayload,
     envVars.JWT_REFRESH_SECRET,
     envVars.JWT_REFRESH_EXPIRES
@@ -26,4 +30,47 @@ export const createUserTokens = (user: Partial<IUser>) => {
     accessToken,
     refreshToken,
   };
+};
+
+export const createNewAccessTokenWithRefreshToken = async (
+  refreshToken: string
+) => {
+  const verifiedRefreshToken = verifyToken(
+    refreshToken,
+    envVars.JWT_REFRESH_SECRET
+  ) as JwtPayload;
+
+  const isUserExists = await User.findOne({
+    email: verifiedRefreshToken.email,
+  });
+
+  if (!isUserExists) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User Does Not Exists!");
+  }
+  if (
+    isUserExists.isActive === IsActive.BLOCKED ||
+    isUserExists.isActive === IsActive.INACTIVE
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `User is ${isUserExists.isActive}`
+    );
+  }
+  if (isUserExists.isDeleted) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User is deleted!");
+  }
+
+  const jwtPayload = {
+    userId: isUserExists?._id,
+    email: isUserExists?.email,
+    role: isUserExists?.role,
+  };
+
+  // Generated from utils/jwt
+  const accessToken = generateToken(
+    jwtPayload,
+    envVars.JWT_ACCESS_SECRET,
+    envVars.JWT_ACCESS_EXPIRES
+  );
+  return accessToken;
 };

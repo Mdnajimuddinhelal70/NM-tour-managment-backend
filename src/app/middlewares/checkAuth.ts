@@ -1,12 +1,15 @@
 /* eslint-disable no-console */
 import type { NextFunction, Request, Response } from "express";
+import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
+import { IsActive } from "../modules/user/user.interface";
+import { User } from "../modules/user/user.model";
 import { verifyToken } from "../utils/jwt";
 export const checkAuth =
   (...authRoles: string[]) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const accessToken = req.headers.authorization;
 
@@ -18,6 +21,26 @@ export const checkAuth =
         accessToken,
         envVars.JWT_ACCESS_SECRET
       ) as JwtPayload;
+
+      const isUserExists = await User.findOne({
+        email: verifiedToken.email,
+      });
+
+      if (!isUserExists) {
+        throw new AppError(httpStatus.BAD_REQUEST, "User Does Not Exists!");
+      }
+      if (
+        isUserExists.isActive === IsActive.BLOCKED ||
+        isUserExists.isActive === IsActive.INACTIVE
+      ) {
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          `User is ${isUserExists.isActive}`
+        );
+      }
+      if (isUserExists.isDeleted) {
+        throw new AppError(httpStatus.BAD_REQUEST, "User is deleted!");
+      }
 
       if (!authRoles.includes(verifiedToken.role)) {
         throw new AppError(403, "You are not parmitted to view this route!!");
