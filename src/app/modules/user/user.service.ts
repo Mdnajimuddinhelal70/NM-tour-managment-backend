@@ -19,11 +19,6 @@ const createUser = async (payload: Partial<IUser>) => {
     Number(envVars.BCRYPT_SALT_ROUND)
   );
 
-  // const isPasswordMatched = await bcryptjs.compare(
-  //   password as string,
-  //   hashedPassword
-  // );
-
   const authProvider: IAuthProvider = {
     provider: "credentials",
     providerId: email as string,

@@ -1,12 +1,15 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { genaerateToken, verifyToken } from "../../utils/jwt";
-import { createUserTokens } from "../../utils/userTokens";
-import { IsActive, type IUser } from "../user/user.interface";
+import {
+  createNewAccessTokenWithRefreshToken,
+  createUserTokens,
+} from "../../utils/userTokens";
+import { type IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
@@ -25,24 +28,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password!");
   }
 
-  // const jwtPayload = {
-  //   userId: isUserExists?._id,
-  //   email: isUserExists?.email,
-  //   role: isUserExists?.role,
-  // };
-
-  // // Generated from utils/jwt
-  // const accessToken = genaerateToken(
-  //   jwtPayload,
-  //   envVars.JWT_ACCESS_SECRET,
-  //   envVars.JWT_ACCESS_EXPIRES
-  // );
-
-  // const refreshToken = genaerateToken(
-  //   jwtPayload,
-  //   envVars.JWT_REFRESH_SECRET,
-  //   envVars.JWT_REFRESH_EXPIRES
-  // );
+  // Optimization in the userTokens file
   const userTokens = createUserTokens(isUserExists);
 
   const { password: pass, ...rest } = isUserExists.toObject();
@@ -55,50 +41,42 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
 };
 
 const getNewAccessToken = async (refreshToken: string) => {
-  const verifiedRefreshToken = verifyToken(
-    refreshToken,
-    envVars.JWT_REFRESH_SECRET
-  ) as JwtPayload;
-
-  const isUserExists = await User.findOne({
-    email: verifiedRefreshToken.email,
-  });
-
-  if (!isUserExists) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User Does Not Exists!");
-  }
-  if (
-    isUserExists.isActive === IsActive.BLOCKED ||
-    isUserExists.isActive === IsActive.INACTIVE
-  ) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `User is ${isUserExists.isActive}`
-    );
-  }
-  if (isUserExists.isDeleted) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User is deleted!");
-  }
-
-  const jwtPayload = {
-    userId: isUserExists?._id,
-    email: isUserExists?.email,
-    role: isUserExists?.role,
-  };
-
-  // Generated from utils/jwt
-  const accessToken = genaerateToken(
-    jwtPayload,
-    envVars.JWT_ACCESS_SECRET,
-    envVars.JWT_ACCESS_EXPIRES
+  // Optimization in the userTokens file
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(
+    refreshToken
   );
 
   return {
-    accessToken,
+    accessToken: newAccessToken,
   };
+};
+
+const resetPassword = async (
+  oldPassword: string,
+  newPassword: string,
+  decodedToken: JwtPayload
+) => {
+  const user = await User.findById(decodedToken.userId);
+
+  const isOldPassword = await bcryptjs.compare(
+    oldPassword,
+    user?.password as string
+  );
+  if (!isOldPassword) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Old password does not matched"
+    );
+  }
+  user!.password = await bcryptjs.hash(
+    newPassword,
+    Number(envVars.BCRYPT_SALT_ROUND)
+  );
+  await user?.save();
 };
 
 export const AuthServices = {
   credentialsLogin,
   getNewAccessToken,
+  resetPassword,
 };
