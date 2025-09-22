@@ -5,6 +5,7 @@ import cors from "cors";
 import express, { type Request, type Response } from "express";
 import expressSession from "express-session";
 import passport from "passport";
+import "./app/config/passport"; //!For passport
 import { notFound } from "./app/middlewares/notFound";
 import { router } from "./app/routes";
 
@@ -16,9 +17,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
   })
-);
-app.use(passport.initialize());
-app.use(passport.session());
+); //!For passport
+app.use(passport.initialize()); //!For passport
+app.use(passport.session()); //!For passport
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
