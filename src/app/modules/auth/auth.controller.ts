@@ -95,6 +95,11 @@ const resetPassword = catchAsync(
 
 const googleCallbackController = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    let redirectTo = req.query.state ? (req.query.state as string) : "";
+
+    if (redirectTo.startsWith("/")) {
+      redirectTo = redirectTo.slice(1);
+    }
     const user = req.user;
 
     if (!user) {
@@ -102,14 +107,7 @@ const googleCallbackController = catchAsync(
     }
     const tokenInfo = createUserTokens(user);
     setAuthCookie(res, tokenInfo);
-
-    // sendResponse(res, {
-    //   success: true,
-    //   statusCode: httpStatus.OK,
-    //   message: "Password changed successfully",
-    //   data: null,
-    // });
-    res.redirect(`${envVars.FRONTEND_URL}/booking`);
+    res.redirect(`${envVars.FRONTEND_URL}/${redirectTo}`);
   }
 );
 
