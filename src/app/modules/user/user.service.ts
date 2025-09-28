@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
 import type { JwtPayload } from "jsonwebtoken";
@@ -9,10 +10,10 @@ const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
 
   const isUserExists = await User.findOne({ email });
-
-  if (isUserExists) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User Already Exists");
-  }
+  console.log(isUserExists);
+  // if (isUserExists) {
+  //   throw new AppError(httpStatus.BAD_REQUEST, "User Already Exists");
+  // }
 
   const hashedPassword = await bcryptjs.hash(
     password as string,
