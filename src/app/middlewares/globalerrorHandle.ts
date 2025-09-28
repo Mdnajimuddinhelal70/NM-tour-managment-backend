@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -16,6 +17,9 @@ export const globalErrorHandler = async (
   res: Response,
   next: NextFunction
 ) => {
+  if (envVars.NODE_ENV === "development") {
+    console.log(err);
+  }
   let errorSources: TErrorSources[] = [];
   let statusCode = 500;
   let message = "Something Went Wrong!!";
