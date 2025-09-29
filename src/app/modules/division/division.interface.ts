@@ -1,4 +1,4 @@
-export interface IDivisin {
+export interface IDivisoin {
   name: string;
   slug: string;
   thumbnail?: string;
