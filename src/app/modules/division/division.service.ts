@@ -7,6 +7,14 @@ const createDivision = async (payload: IDivisoin) => {
     throw new Error("A division with this name already exists.");
   }
 
+  // const baseSlug = payload.name.toLowerCase().split(" ").join("-");
+  // let slug = `${baseSlug}-division`;
+  // let counter = 0;
+  // while (await Division.exists({ slug })) {
+  //   slug = `${slug}-${counter++}`;
+  // }
+
+  // payload.slug = slug;
   const division = await Division.create(payload);
   return division;
 };
@@ -45,15 +53,30 @@ const updateDivision = async (id: string, payload: Partial<IDivisoin>) => {
     throw new Error("A Division with this name already exists.");
   }
 
+  // if (payload.name) {
+  //   const baseSlug = payload.name.toLowerCase().split(" ").join("-");
+  //   let slug = `${baseSlug}-division`;
+  //   let counter = 0;
+  //   while (await Division.exists({ slug })) {
+  //     slug = `${slug}-${counter++}`;
+  //   }
+  //   payload.slug = slug;
+  // }
   const updatedDivision = await Division.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
   });
   return updatedDivision;
 };
+
+const deleteDivision = async (id: string) => {
+  await Division.findByIdAndDelete(id);
+  return null;
+};
 export const DivisionService = {
   createDivision,
   getAllDivisions,
   getSingleDivision,
   updateDivision,
+  deleteDivision,
 };
