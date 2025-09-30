@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import type { IDivisin } from "./division.interface";
+import type { IDivisoin } from "./division.interface";
 
-const divisionSchema = new Schema<IDivisin>(
+const divisionSchema = new Schema<IDivisoin>(
   {
     name: { type: String, required: true, unique: true },
     slug: { type: String, unique: true },
@@ -13,4 +13,39 @@ const divisionSchema = new Schema<IDivisin>(
   }
 );
 
-export const Division = model<IDivisin>("Division", divisionSchema);
+divisionSchema.pre("save", async function (next) {
+  if (this.isModified("name")) {
+    const baseSlug = this.name.toLowerCase().split(" ").join("-");
+    let slug = `${baseSlug}-division`;
+    let counter = 0;
+    while (await Division.exists({ slug })) {
+      slug = `${slug}-${counter++}`;
+    }
+
+    this.slug = slug;
+  }
+
+  next();
+});
+
+divisionSchema.pre("findOneAndUpdate", async function (next) {
+  const division = this.getUpdate as Partial<IDivisoin>;
+
+  if (division.name) {
+    const baseSlug = division.name.toLowerCase().split(" ").join("-");
+
+    let slug = `${baseSlug}-division`;
+
+    let counter = 0;
+
+    while (await Division.exists({ slug })) {
+      slug = `${slug}-${counter++}`;
+    }
+    division.slug = slug;
+  }
+
+  this.setUpdate(division);
+  next();
+});
+
+export const Division = model<IDivisoin>("Division", divisionSchema);
