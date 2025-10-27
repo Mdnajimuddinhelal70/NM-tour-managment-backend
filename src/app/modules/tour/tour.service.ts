@@ -1,7 +1,7 @@
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { tourSearchableFields } from "./tour.constant";
-import type { ITour } from "./tour.interface";
-import { Tour } from "./tour.model";
+import type { ITour, ITourType } from "./tour.interface";
+import { Tour, TourType } from "./tour.model";
 
 const createTour = async (payload: ITour) => {
   const existingTour = await Tour.findOne({ title: payload.title });
@@ -57,9 +57,20 @@ const deleteTour = async (id: string) => {
   return await Tour.findByIdAndDelete(id);
 };
 
+const createTourType = async (payload: ITourType) => {
+  const existingTourType = await TourType.findOne({ name: payload.name });
+
+  if (existingTourType) {
+    throw new Error("Tour type already exists.");
+  }
+
+  return await TourType.create(payload);
+};
+
 export const TourService = {
   createTour,
   getAllTours,
   updateTour,
   deleteTour,
+  createTourType,
 };
