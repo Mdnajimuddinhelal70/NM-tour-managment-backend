@@ -29,7 +29,7 @@ divisionSchema.pre("save", async function (next) {
 });
 
 divisionSchema.pre("findOneAndUpdate", async function (next) {
-  const division = this.getUpdate as Partial<IDivisoin>;
+  const division = this.getUpdate() as Partial<IDivisoin>;
 
   if (division.name) {
     const baseSlug = division.name.toLowerCase().split(" ").join("-");
