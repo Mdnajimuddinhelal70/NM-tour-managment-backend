@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
-import { catchAsync } from "../../utils/catchAsync";
+import AppError from "../../errorHelpers/AppError";
 import { sendResponse } from "../../utils/sendResponse";
+import { catchAsync } from "./../../utils/catchAsync";
 import { TourService } from "./tour.service";
 
 const createTour = catchAsync(async (req: Request, res: Response) => {
@@ -28,7 +29,22 @@ const getAllTours = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingleTour = catchAsync(async (req: Request, res: Response) => {
+  const slug = req.params.slug;
+  if (!slug) {
+    throw new AppError(400, "Slug is required!");
+  }
+  const result = await TourService.getSingleTour(slug);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour retrieved successfully",
+    data: result,
+  });
+});
+
 export const TourControler = {
   createTour,
   getAllTours,
+  getSingleTour,
 };
