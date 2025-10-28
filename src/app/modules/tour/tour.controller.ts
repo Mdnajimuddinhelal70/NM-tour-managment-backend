@@ -43,8 +43,21 @@ const getSingleTour = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateTour = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) throw new AppError(400, "Tour ID is required");
+  const result = await TourService.updateTour(id, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour updated successfully",
+    data: result,
+  });
+});
+
 export const TourControler = {
   createTour,
   getAllTours,
   getSingleTour,
+  updateTour,
 };
