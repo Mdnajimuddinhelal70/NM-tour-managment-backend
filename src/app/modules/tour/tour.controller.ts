@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
-import { catchAsync } from "../../utils/catchAsync";
+import AppError from "../../errorHelpers/AppError";
 import { sendResponse } from "../../utils/sendResponse";
+import { catchAsync } from "./../../utils/catchAsync";
 import { TourService } from "./tour.service";
 
 const createTour = catchAsync(async (req: Request, res: Response) => {
@@ -14,6 +15,49 @@ const createTour = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllTours = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query;
+
+  const result = await TourService.getAllTours(query as Record<string, string>);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tours retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
+const getSingleTour = catchAsync(async (req: Request, res: Response) => {
+  const slug = req.params.slug;
+  if (!slug) {
+    throw new AppError(400, "Slug is required!");
+  }
+  const result = await TourService.getSingleTour(slug);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour retrieved successfully",
+    data: result,
+  });
+});
+
+const updateTour = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) throw new AppError(400, "Tour ID is required");
+  const result = await TourService.updateTour(id, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour updated successfully",
+    data: result,
+  });
+});
+
 export const TourControler = {
   createTour,
+  getAllTours,
+  getSingleTour,
+  updateTour,
 };
