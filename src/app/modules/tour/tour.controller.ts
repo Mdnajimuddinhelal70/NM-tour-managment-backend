@@ -89,7 +89,7 @@ const createTourType = catchAsync(async (req: Request, res: Response) => {
 });
 const updateTourType = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  if (!id) throw new AppError(400, "Tour ID is required");
+  if (!id) throw new AppError(400, "Tour type ID is required");
   const { name } = req.body;
   const result = await TourService.updateTourType(id, name);
   sendResponse(res, {
@@ -100,6 +100,18 @@ const updateTourType = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const deleteTourType = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) throw new AppError(400, "Tour type ID is required");
+  const result = await TourService.deleteTourType(id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Tour type deleted successfylly.",
+    data: result,
+  });
+});
 export const TourControler = {
   createTour,
   getAllTours,
@@ -109,4 +121,5 @@ export const TourControler = {
   getAllTourTypes,
   createTourType,
   updateTourType,
+  deleteTourType,
 };
